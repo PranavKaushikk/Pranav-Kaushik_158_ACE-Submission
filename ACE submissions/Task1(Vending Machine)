@@ -1,0 +1,153 @@
+class Item:
+    def __init__(self, code, name, price, stock=100):
+        self.code = code
+        self.name = name
+        self.price = price
+        self.stock = stock
+
+
+class VendingMachine:
+    def __init__(self):
+        self.inventory = {
+            1: Item(1, "Coke", 40, 100),
+            2: Item(2, "Water Bottle", 20, 100),
+            3: Item(3, "Chips", 30, 100)
+        }
+        self.cart = {}
+
+    def show_items(self):
+        print("\nAvailable Products:")
+        print("Code | Name          | Price (₹) | Stock")
+        print("------------------------------------------")
+        for item in self.inventory.values():
+            print(f"{item.code:<5} | {item.name:<12} | {item.price:<9} | {item.stock}")
+
+    def add_to_cart(self, code, qty):
+        if code not in self.inventory:
+            print("Invalid product code.")
+            return False
+
+        item = self.inventory[code]
+
+        if qty > item.stock:
+            print(f"Only {item.stock} {item.name}(s) available.")
+            return False
+
+        item.stock -= qty
+
+        if code in self.cart:
+            self.cart[code] += qty
+        else:
+            self.cart[code] = qty
+
+        print(f"Added {qty} {item.name}(s) to cart.")
+        return True
+
+    def show_cart(self):
+        if not self.cart:
+            print("\nYour cart is empty.")
+            return 0
+
+        print("\nYour Cart:")
+        print("Name          | Qty | Price (₹) | Total (₹)")
+        print("---------------------------------------------")
+        total = 0
+        for code, qty in self.cart.items():
+            item = self.inventory[code]
+            cost = item.price * qty
+            total += cost
+            print(f"{item.name:<12} | {qty:<3} | {item.price:<9} | {cost}")
+        print("---------------------------------------------")
+        print(f"Total Bill: ₹{total}")
+        return total
+
+    def checkout(self):
+        total = self.show_cart()
+        if total == 0:
+            return
+
+        inserted = 0
+        while True:
+            print("\nInsert money (or type 'exit' to cancel):")
+            money_input = input("> ")
+
+            if money_input.lower() == "exit":
+                if inserted > 0:
+                    print(f"Transaction cancelled. Collect your ₹{inserted} amount.")
+                else:
+                    print("Transaction cancelled.")
+                return
+
+            try:
+                money = int(money_input)
+            except ValueError:
+                print("Please enter a valid number.")
+                continue
+
+            if money <= 0:
+                print("Amount must be greater than 0.")
+                continue
+
+            inserted += money
+
+            if inserted < total:
+                print(f"₹{inserted} inserted. Enter ₹{total - inserted} more to proceed.")
+            elif inserted == total:
+                print("Payment successful.")
+                print("Collect your items. Thank you.")
+                break
+            else:
+                change = inserted - total
+                print("Payment successful.")
+                print(f"Collect your items and ₹{change} change. Thank you.")
+                break
+
+
+def main():
+    vm = VendingMachine()
+
+    print("Welcome to the Vending Machine")
+    while True:
+        vm.show_items()
+        print("\nEnter product code to buy (or '0' to checkout, 'exit' to quit):")
+        choice = input("> ")
+
+        if choice.lower() == "exit":
+            print("Exiting. Thank you.")
+            break
+
+        if choice == "0":
+            vm.checkout()
+            break
+
+        try:
+            code = int(choice)
+        except ValueError:
+            print("Invalid input, please enter a number.")
+            continue
+
+        if code not in vm.inventory:
+            print("Invalid code, try again.")
+            continue
+
+        print(f"Enter quantity for {vm.inventory[code].name}:")
+        try:
+            qty = int(input("> "))
+        except ValueError:
+            print("Please enter a valid number.")
+            continue
+
+        if qty <= 0:
+            print("Quantity must be greater than 0.")
+            continue
+
+        if vm.add_to_cart(code, qty):
+            print("\nDo you want to add more items? (y/n):")
+            ans = input("> ").lower()
+            if ans == "n":
+                vm.checkout()
+                break
+
+
+if __name__ == "__main__":
+    main()
